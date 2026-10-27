@@ -12,6 +12,8 @@ export const cfg = {
   get llmBaseUrl() { return env('LLM_BASE_URL', 'http://localhost:11434/v1'); },
   get llmApiKey() { return env('LLM_API_KEY', 'ollama'); },
   get llmModel() { return env('LLM_MODEL', 'qwen2.5:3b'); },
+  // true: stream while tool calls may happen. false: non-streaming rounds, finished answer is emitted at the end.
+  get streamWithTools() { return env('LLM_STREAM_TOOLS', 'true') === 'true'; },
   get llmTimeoutMs() { return Number(env('LLM_TIMEOUT_MS', 120000)); },
   get clientOrigin() { return env('CLIENT_ORIGIN', 'http://localhost:5173'); },
 };

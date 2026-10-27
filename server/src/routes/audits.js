@@ -1,19 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Audit } from '../models/index.js';
-import { AppError, isId, requireAuth, validate } from '../middleware/index.js';
-import { brief, createAudit, decorate } from '../services/auditService.js';
+import { requireAuth, validate } from '../middleware/index.js';
+import { brief, createAudit, decorate, findOwned } from '../services/auditService.js';
 import { compareAudits } from '../audit/compare.js';
 
 const createSchema = z.object({ url: z.string().trim().min(3).max(2048) });
 const compareSchema = z.object({ a: z.string(), b: z.string() });
 const trendSchema = z.object({ url: z.string().trim().min(3).max(2048) });
 
-export async function findOwned(userId, id) {
-  const audit = isId(id) ? await Audit.findOne({ _id: id, user: userId }) : null;
-  if (!audit) throw new AppError(404, 'Audit not found');
-  return audit;
-}
 
 export const auditsRouter = Router();
 auditsRouter.use(requireAuth);

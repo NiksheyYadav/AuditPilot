@@ -3,6 +3,14 @@ import { getRemediation } from '../audit/remediation.js';
 import { describeLlm } from '../config.js';
 import { Audit } from '../models/index.js';
 import { scheduleSummary } from '../agent/summary.js';
+import { AppError, isId } from '../middleware/index.js';
+
+/** Ownership gate: a user can only ever load their own audits (404 otherwise, no existence leak). */
+export async function findOwned(userId, id) {
+  const audit = isId(id) ? await Audit.findOne({ _id: id, user: userId }) : null;
+  if (!audit) throw new AppError(404, 'Audit not found');
+  return audit;
+}
 
 /** Run the deterministic audit, persist it, then generate the AI summary in the background. */
 export async function createAudit(userId, url, { ai = true } = {}) {

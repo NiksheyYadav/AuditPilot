@@ -111,3 +111,4 @@ label { display: grid; gap: .25rem; font-weight: 600; font-size: .88rem; margin-
   .card, .finding { box-shadow: none; break-inside: avoid; } .cols { display: block; } .f-body { display: block !important; } .page { padding: 0; max-width: none; }
   .snippet pre { white-space: pre-wrap; background: #f4f4f4; color: #000; } .snippet-head { background: #ddd; color: #000; }
 }
+.md-code { background: #1a1438; color: #e9e5ff; padding: .7rem; border-radius: 8px; overflow-x: auto; font-size: .78rem; margin: .5rem 0; }

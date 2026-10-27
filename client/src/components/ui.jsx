@@ -48,10 +48,15 @@ export function MiniScore({ label, value }) {
 const inline = (s) => s.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) =>
   p.startsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : p.startsWith('`') ? <code key={i}>{p.slice(1, -1)}</code> : p);
 export function Md({ text }) {
-  const out = []; let list = null;
+  const out = []; let list = null; let code = null;
   const flush = () => { if (list) { out.push(list.ordered ? <ol key={out.length}>{list.items}</ol> : <ul key={out.length}>{list.items}</ul>); list = null; } };
   (text || '').split('\n').forEach((raw, i) => {
     const line = raw.trim();
+    if (line.startsWith('```')) {
+      if (code) { out.push(<pre key={`c${i}`} className="md-code"><code>{code.join('\n')}</code></pre>); code = null; } else { flush(); code = []; }
+      return;
+    }
+    if (code) { code.push(raw); return; }
     const m = /^(\d+)[.)]\s+(.*)/.exec(line) || /^[-*]\s+(.*)/.exec(line);
     if (m) {
       const ordered = /^\d/.test(line);
@@ -60,6 +65,8 @@ export function Md({ text }) {
     } else { flush(); if (line) out.push(<p key={i}>{inline(line.replace(/^#+\s*/, ''))}</p>); }
   });
   flush();
+  if (code) out.push(<pre key="cend" className="md-code"><code>{code.join('
+')}</code></pre>);
   return <div className="md">{out}</div>;
 }
 
