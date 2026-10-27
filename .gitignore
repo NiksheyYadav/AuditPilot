@@ -4,3 +4,4 @@ dist/
 *.log
 .mongo-cache/
 screenshots/_tmp/
+docs/deck/_crops/

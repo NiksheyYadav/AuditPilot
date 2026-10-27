@@ -42,10 +42,16 @@ export const TOOLS = [
   },
   {
     name: 'compare_audits', mcpName: 'compare_audits',
-    description: 'Compare two audits: score changes, fixed issues, new issues.',
-    schema: z.object({ audit_id_a: z.string().min(8).max(40), audit_id_b: z.string().min(8).max(40) }),
+    description: 'Compare two audits (default: most recent other audit vs the current one).',
+    schema: z.object({ audit_id_a: z.string().min(8).max(40).optional(), audit_id_b: z.string().min(8).max(40).optional() }),
     handler: async (ctx, { audit_id_a, audit_id_b }) => {
-      const [a, b] = await Promise.all([findOwned(ctx.userId, audit_id_a), findOwned(ctx.userId, audit_id_b)]);
+      const recent = await Audit.find({ user: ctx.userId }).sort({ createdAt: -1 }).limit(6).select('url scores');
+      const valid = () => recent.map((x) => `${x._id} (${x.url}, ${x.scores.overall})`).join('; ');
+      const other = recent.find((x) => String(x._id) !== ctx.auditId);
+      let a, b;
+      try {
+        [a, b] = await Promise.all([findOwned(ctx.userId, audit_id_a || other?._id), findOwned(ctx.userId, audit_id_b || ctx.auditId)]);
+      } catch { throw new Error(`Audit not found. Use exact ids from this list: ${valid()}`); }
       const c = compareAudits(a.toObject(), b.toObject());
       const t = (l) => l.slice(0, 8).map((f) => `${f.title} (${f.severity})`);
       return { deltas: c.deltas, fixedCount: c.fixed.length, fixed: t(c.fixed), newIssueCount: c.newIssues.length, newIssues: t(c.newIssues), stillOpen: c.stillOpenCount };
