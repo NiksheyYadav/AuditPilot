@@ -30,7 +30,7 @@ export function createApp({ auditRateLimit = cfg.auditRateLimit, chatRateLimit =
   });
   const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 100, skip: () => process.env.NODE_ENV === 'test', standardHeaders: true, legacyHeaders: false });
 
-  app.get('/api/health', async (req, res) => res.json({ status: 'ok', llm: { ...describeLlm(), ...(await llmHealth()) }, allowPrivateTargets: cfg.allowPrivate }));
+  app.get('/api/health', async (req, res) => res.json({ status: 'ok', llm: { ...describeLlm(), ...(await llmHealth()) }, allowPrivateTargets: cfg.allowPrivate, demoBase: `http://localhost:${cfg.port}` }));
   app.use('/api/auth', authLimiter, authRouter);
   app.post('/api/audits', requireAuth, perUser(auditRateLimit));
   app.use('/api/audits', chatRouter(perUser(chatRateLimit)));
