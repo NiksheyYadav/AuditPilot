@@ -77,7 +77,7 @@ if (-not $SkipModel) {
   if (-not (Have ollama)) { throw 'Ollama is not on PATH. Open a new terminal and run setup.bat again.' }
   Ok (& ollama --version 2>&1 | Select-Object -Last 1)
 
-  $up = { try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:11434/api/version' -TimeoutSec 2).StatusCode -eq 200 } catch { $false } }
+  $up = { try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:11434/api/version' -TimeoutSec 2).StatusCode -eq 200 } catch { $false } }
   if (-not (& $up)) {
     Warn 'Starting the Ollama server'
     Start-Process -FilePath 'ollama' -ArgumentList 'serve' -WindowStyle Hidden

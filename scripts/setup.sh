@@ -87,7 +87,7 @@ if [ "$SKIP_MODEL" = 0 ]; then
   fi
   ok "$(ollama --version 2>&1 | tail -1)"
 
-  up() { curl -fsS --max-time 2 http://localhost:11434/api/version >/dev/null 2>&1; }
+  up() { curl -fsS --max-time 2 http://127.0.0.1:11434/api/version >/dev/null 2>&1; }
   if ! up; then
     warn "Starting the Ollama server"
     if [ "$OS" = "Darwin" ] && have brew; then brew services start ollama >/dev/null 2>&1 || true; fi
