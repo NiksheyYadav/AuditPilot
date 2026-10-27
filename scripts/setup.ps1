@@ -20,7 +20,7 @@ function Ok($m)   { Write-Host "    [ok] $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "    [!]  $m" -ForegroundColor Yellow }
 function Have($n) { [bool](Get-Command $n -ErrorAction SilentlyContinue) }
 function RefreshPath { $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User') }
-function Winget($id) {
+function Install-WithWinget($id) {
   if (-not (Have winget)) { throw "winget is not available. Install $id manually (see README), then re-run setup.bat." }
   winget install --id $id -e --silent --accept-source-agreements --accept-package-agreements | Out-Host
   RefreshPath
@@ -61,8 +61,8 @@ if ($DryRun) {
 # ---------------------------------------------------------------- 2. Node.js
 Say 'Checking Node.js (needs 22 or newer)'
 $nodeOk = $false
-if (Have node) { $nodeOk = ([int](& node -p 'process.versions.node.split(".")[0]')) -ge 22 }
-if (-not $nodeOk) { Warn 'Installing Node.js LTS'; Winget 'OpenJS.NodeJS.LTS' }
+if (Have node) { $nodeOk = ([int](((& node -v) -replace '^v', '') -split '\.')[0]) -ge 22 }
+if (-not $nodeOk) { Warn 'Installing Node.js LTS'; Install-WithWinget 'OpenJS.NodeJS.LTS' }
 if (-not (Have node)) { throw 'Node.js was installed but is not on PATH yet. Open a new terminal and run setup.bat again.' }
 Ok "Node $(& node -v), npm $(& npm -v)"
 
@@ -71,7 +71,7 @@ if (-not $SkipModel) {
   Say 'Checking Ollama'
   if (-not (Have ollama)) {
     $guess = Join-Path $env:LOCALAPPDATA 'Programs\Ollama'
-    if (Test-Path (Join-Path $guess 'ollama.exe')) { $env:Path += ";$guess" } else { Warn 'Installing Ollama'; Winget 'Ollama.Ollama' }
+    if (Test-Path (Join-Path $guess 'ollama.exe')) { $env:Path += ";$guess" } else { Warn 'Installing Ollama'; Install-WithWinget 'Ollama.Ollama' }
     if (-not (Have ollama) -and (Test-Path (Join-Path $guess 'ollama.exe'))) { $env:Path += ";$guess" }
   }
   if (-not (Have ollama)) { throw 'Ollama is not on PATH. Open a new terminal and run setup.bat again.' }
