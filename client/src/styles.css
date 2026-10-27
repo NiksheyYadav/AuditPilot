@@ -117,3 +117,9 @@ label { display: grid; gap: .25rem; font-weight: 600; font-size: .88rem; margin-
 .sched-form { display: flex; gap: .6rem; margin: .8rem 0; flex-wrap: wrap; } .sched-form input { flex: 1; min-width: 200px; }
 .sched-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 0; border-top: 1px solid var(--line); }
 .hero-card .check { margin: .2rem 0 .8rem; }
+
+.hist-search { width: 100%; margin-top: .8rem; } .nowrap { white-space: nowrap; } .pager { margin-top: .8rem; }
+.tiny-badge { margin-left: .4rem; padding: .05rem .45rem; font-size: .68rem; }
+.pw-wrap { display: flex; gap: .5rem; align-items: center; } .pw-wrap input { flex: 1; }
+
+.auth-card .alert { margin: .6rem 0 1rem; }

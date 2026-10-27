@@ -40,5 +40,5 @@ export const decorate = (audit) => {
 
 export const brief = (a) => ({
   id: String(a._id), url: a.url, finalUrl: a.finalUrl, scores: a.scores, aiStatus: a.aiStatus, llm: a.llm, createdAt: a.createdAt,
-  rendered: a.rendered, issues: (a.findings || []).filter((f) => f.severity !== 'pass').length, seeded: a.seeded,
+  rendered: a.rendered, chatCount: (a.chat || []).length, issues: (a.findings || []).filter((f) => f.severity !== 'pass').length, seeded: a.seeded,
 });

@@ -8,16 +8,20 @@ export default function Login() {
   const { user, signIn } = useAuth();
   const nav = useNavigate();
   const [mode, setMode] = useState('login');
-  const [f, setF] = useState({ name: '', email: '', password: '' });
+  const [f, setF] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [show, setShow] = useState(false);
+  const [notice] = useState(() => { try { const n = sessionStorage.getItem('ap_notice'); sessionStorage.removeItem('ap_notice'); return n || ''; } catch { return ''; } });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   if (user) return <Navigate to="/" replace />;
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   async function submit(e) {
-    e.preventDefault(); setErr(''); setBusy(true);
+    e.preventDefault(); setErr('');
+    if (mode === 'register' && f.password !== f.confirm) { setErr('Passwords do not match'); return; }
+    setBusy(true);
     try {
-      const r = mode === 'login' ? await api.login({ email: f.email, password: f.password }) : await api.register(f);
+      const r = mode === 'login' ? await api.login({ email: f.email.trim(), password: f.password }) : await api.register({ name: f.name, email: f.email.trim(), password: f.password });
       signIn(r); nav('/');
     } catch (e2) {
       const d = e2.details ? Object.values(e2.details).flat().join(' ') : '';
@@ -35,9 +39,12 @@ export default function Login() {
       </section>
       <form className="auth-card card" onSubmit={submit}>
         <h2>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+        {notice && <div className="alert note" role="status">{notice}</div>}
         {mode === 'register' && <label>Name<input value={f.name} onChange={set('name')} required minLength={2} autoComplete="name" /></label>}
         <label>Email<input type="email" value={f.email} onChange={set('email')} required autoComplete="email" /></label>
-        <label>Password<input type="password" value={f.password} onChange={set('password')} required minLength={mode === 'register' ? 8 : 1} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} /></label>
+        <label>Password<span className="pw-wrap"><input type={show ? 'text' : 'password'} value={f.password} onChange={set('password')} required minLength={mode === 'register' ? 8 : 1} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} /><button type="button" className="link small" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button></span>
+          {mode === 'register' && <span className="muted small">At least 8 characters.</span>}</label>
+        {mode === 'register' && <label>Confirm password<input type={show ? 'text' : 'password'} value={f.confirm} onChange={set('confirm')} required minLength={8} autoComplete="new-password" /></label>}
         {err && <ErrorBox>{err}</ErrorBox>}
         <button className="btn primary block" disabled={busy}>{busy ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Sign up'}</button>
         <p className="muted small center">{mode === 'login' ? 'New here?' : 'Already registered?'}{' '}

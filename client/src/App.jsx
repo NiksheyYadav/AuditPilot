@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Report from './pages/Report.jsx';
 import Compare from './pages/Compare.jsx';
+import History from './pages/History.jsx';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -46,7 +47,7 @@ function Shell() {
     <>
       <header className="topbar">
         <Link to="/" className="brand"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden><rect width="32" height="32" rx="8" fill="url(#bg)" /><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b5cf6" /><stop offset="1" stopColor="#ec4899" /></linearGradient></defs><path d="M16 6l7 18-7-4-7 4z" fill="#fff" /></svg>AuditPilot</Link>
-        <nav><NavLink to="/" end>Dashboard</NavLink><NavLink to="/compare">Compare</NavLink></nav>
+        <nav><NavLink to="/" end>Dashboard</NavLink><NavLink to="/history">History</NavLink><NavLink to="/compare">Compare</NavLink></nav>
         <div className="spacer" />
         <LlmBadge />
         <span className="user">{user.name}</span>
@@ -66,6 +67,7 @@ export default function App() {
           <Route element={<Shell />}>
             <Route index element={<Dashboard />} />
             <Route path="audits/:id" element={<Report />} />
+            <Route path="history" element={<History />} />
             <Route path="compare" element={<Compare />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

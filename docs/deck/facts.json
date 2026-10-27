@@ -1,7 +1,21 @@
 {
-  "tests_total": 79,
-  "audit": 19, "ssrf": 21, "api": 10, "agent": 18, "features": 8, "mcp": 3,
+  "tests_total": 86,
+  "audit": 19,
+  "ssrf": 21,
+  "api": 10,
+  "agent": 18,
+  "features": 8,
+  "mcp": 3,
   "live": 4,
-  "bad": 54, "good": 96, "fixed": 22,
-  "nik": { "overall": 79, "seo": 74, "accessibility": 90, "security": 65, "performance": 94 }
+  "bad": 54,
+  "good": 96,
+  "fixed": 22,
+  "nik": {
+    "overall": 79,
+    "seo": 74,
+    "accessibility": 90,
+    "security": 65,
+    "performance": 94
+  },
+  "history": 7
 }

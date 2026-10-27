@@ -15,7 +15,7 @@ npm run setup     # installs root, server and client, creates server/.env from .
 npm run dev       # API on :4000 and UI on http://localhost:5173 (one terminal)
 ```
 
-With `MONGO_URI` empty the server starts an **in-memory MongoDB** and prints a banner `DEMO DB ... resets on restart`. It also seeds a demo login:
+With `MONGO_URI` empty the server starts a local MongoDB (mongodb-memory-server) and prints a `DEMO DB` banner. By default (`DEMO_DB_PERSIST=true`) its files live in `server/.data/mongo`, so **accounts, audits and chat history survive restarts** (delete that folder to reset). Set `DEMO_DB_PERSIST=false` for a pure in-memory DB that resets on every restart. It also seeds a demo login:
 
 | Email | Password |
 |---|---|
@@ -36,6 +36,11 @@ Then open http://localhost:5173, log in and press **Audit demo (bad)** and **Aud
 | `npm run warmup:llm` | loads the model into RAM before the demo |
 | `npm run mcp` | starts the MCP stdio server |
 | `npm run build` | production build of the client (served by the API on :4000) |
+
+## Accounts and history
+
+- **Sign up / sign in** with name, email and password (min 8 characters, confirmed on sign-up). Passwords are bcrypt-hashed; the API issues a 7-day JWT. Every request re-checks that the account still exists, so a token that outlived its database (for example after a reset) gets a clear "please sign in again" instead of half-working.
+- **History page:** every audit with score, issues, AI status and saved chat size; search by URL, paging, delete, and tick two audits to compare. Chat history is saved per audit, reloads with the report, and can be cleared with **Clear chat**.
 
 ## What is in the box (beyond the basic audit)
 
@@ -152,5 +157,5 @@ Claude Desktop (`claude_desktop_config.json`):
 
 - A 3B local model on CPU answers in roughly 15-40 s and can be imprecise (that is why scores never depend on it).
 - Rendering JavaScript needs an installed Chrome/Edge/Chromium and takes longer (about 5-30 s per audit).
-- The in-memory demo DB resets on restart by design; set `MONGO_URI` (Atlas free tier) to keep data. Scheduled audits only run while the API process is running.
+- The demo DB is a local file database (`server/.data/mongo`); use `MONGO_URI` (Atlas free tier) for a hosted one. `npm run mcp` while the API is running uses its own in-memory DB unless you give it the same `MONGO_URI`. Scheduled audits only run while the API process is running.
 - Local demo pages are served over HTTP, so even `/demo/good` loses points on the HTTPS check.

@@ -2,6 +2,13 @@ const TOKEN_KEY = 'ap_token';
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
 
+/** Token no longer valid (expired, or the account vanished after a database reset): sign out and say why. */
+export function endSession(message) {
+  setToken(null);
+  try { sessionStorage.setItem('ap_notice', message || 'Your session ended. Please sign in again.'); } catch { /* storage unavailable */ }
+  window.dispatchEvent(new Event('ap-logout'));
+}
+
 async function req(path, { method = 'GET', body } = {}) {
   const res = await fetch(`/api${path}`, {
     method,
@@ -11,7 +18,7 @@ async function req(path, { method = 'GET', body } = {}) {
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (res.status === 401 && getToken()) { setToken(null); window.dispatchEvent(new Event('ap-logout')); }
+    if (res.status === 401 && getToken()) endSession(data?.error?.message);
     const err = new Error(data?.error?.message || `Request failed (${res.status})`);
     err.status = res.status; err.details = data?.error?.details;
     throw err;
@@ -24,7 +31,11 @@ export const api = {
   register: (b) => req('/auth/register', { method: 'POST', body: b }),
   login: (b) => req('/auth/login', { method: 'POST', body: b }),
   me: () => req('/auth/me'),
-  listAudits: () => req('/audits'),
+  listAudits: (p = {}) => {
+    const qs = new URLSearchParams(Object.entries(p).filter(([, v]) => v !== undefined && v !== '' && v !== null)).toString();
+    return req(`/audits${qs ? `?${qs}` : ''}`);
+  },
+  clearChat: (id) => req(`/audits/${id}/chat`, { method: 'DELETE' }),
   createAudit: (url, render = false) => req('/audits', { method: 'POST', body: { url, render } }),
   listSchedules: () => req('/schedules'),
   createSchedule: (b) => req('/schedules', { method: 'POST', body: b }),
@@ -44,7 +55,10 @@ export async function streamChat(id, message, onEvent, signal) {
   });
   if (!res.ok || !res.body) {
     const d = await res.json().catch(() => ({}));
-    throw new Error(d?.error?.message || `Chat failed (${res.status})`);
+    if (res.status === 401) endSession(d?.error?.message);
+    const err = new Error(d?.error?.message || `Chat failed (${res.status})`);
+    err.status = res.status;
+    throw err;
   }
   const reader = res.body.getReader();
   const dec = new TextDecoder();

@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { ZodError, z } from 'zod';
 import { cfg } from '../config.js';
+import { User } from '../models/index.js';
 
 export class AppError extends Error {
   constructor(status, message, details) { super(message); this.status = status; this.details = details; }
@@ -9,12 +10,18 @@ export class AppError extends Error {
 
 export const signToken = (userId) => jwt.sign({ sub: String(userId) }, cfg.jwtSecret, { expiresIn: '7d' });
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
   if (!token) return next(new AppError(401, 'Authentication required'));
-  try { req.user = { id: jwt.verify(token, cfg.jwtSecret).sub }; next(); }
-  catch { next(new AppError(401, 'Invalid or expired token')); }
+  let id;
+  try { id = jwt.verify(token, cfg.jwtSecret).sub; } catch { return next(new AppError(401, 'Invalid or expired token')); }
+  try {
+    // a valid token for a user that no longer exists (database was reset) must not look like a working session
+    if (!isId(id) || !(await User.exists({ _id: id }))) return next(new AppError(401, 'Your session is no longer valid (account not found). Please sign in again.'));
+  } catch (e) { return next(e); }
+  req.user = { id };
+  next();
 }
 
 /** Parse req[source] with a zod schema; result lands on req.valid. */

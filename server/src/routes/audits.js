@@ -6,6 +6,12 @@ import { brief, createAudit, decorate, findOwned } from '../services/auditServic
 import { compareAudits } from '../audit/compare.js';
 
 const createSchema = z.object({ url: z.string().trim().min(3).max(2048), render: z.boolean().optional() });
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const listSchema = z.object({
+  q: z.string().trim().max(200).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
 const compareSchema = z.object({ a: z.string(), b: z.string() });
 const trendSchema = z.object({ url: z.string().trim().min(3).max(2048) });
 
@@ -22,9 +28,14 @@ auditsRouter.post('/', validate(createSchema), async (req, res) => {
   res.status(201).json(decorate(audit));
 });
 
-auditsRouter.get('/', async (req, res) => {
-  const list = await Audit.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(50).select('-chat');
-  res.json({ audits: list.map(brief) });
+auditsRouter.get('/', validate(listSchema, 'query'), async (req, res) => {
+  const { q, page, limit } = req.valid;
+  const filter = { user: req.user.id, ...(q ? { url: { $regex: escapeRe(q), $options: 'i' } } : {}) };
+  const [total, list] = await Promise.all([
+    Audit.countDocuments(filter),
+    Audit.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+  ]);
+  res.json({ audits: list.map(brief), total, page, pages: Math.max(1, Math.ceil(total / limit)) });
 });
 
 auditsRouter.get('/compare', validate(compareSchema, 'query'), async (req, res) => {
@@ -38,6 +49,13 @@ auditsRouter.get('/trend', validate(trendSchema, 'query'), async (req, res) => {
 });
 
 auditsRouter.get('/:id', async (req, res) => res.json(decorate(await findOwned(req.user.id, req.params.id))));
+
+auditsRouter.delete('/:id/chat', async (req, res) => {
+  const audit = await findOwned(req.user.id, req.params.id);
+  audit.chat = [];
+  await audit.save();
+  res.status(204).end();
+});
 
 auditsRouter.delete('/:id', async (req, res) => {
   const audit = await findOwned(req.user.id, req.params.id);

@@ -258,7 +258,7 @@ s = new('What users can do', 'Functional Modules & Key Features',
     f"Ye saare screenshots running app se Playwright se liye hain, asli local model qwen2.5:3b ke saath, aur real website nikshey.xyz ke audit par. Koi mock ya seeded text nahi hai.\n"
     f"Pehla: animated score gauge, chaar category scores aur AI summary. Doosra: har finding mein evidence aur Nginx ya Express fix snippet.\n"
     "Teesra: agent chat, aur collapsible tool trace jisme tool ka naam, args aur time dikhta hai.\n"
-    "Neeche paanch modules hain: audit engine, AI summary aur chat, compare aur trend, scheduled audits, aur JavaScript rendering."))
+    "Neeche chhe modules hain: audit engine, AI summary aur chat, compare aur trend, history aur sign-in, scheduled audits, aur JavaScript rendering."))
 imgs = [(crop('04-report-top.png', (248, 130, 2628, 1490), 'a.png'), f"Real audit of nikshey.xyz: score {NK['overall']}, category scores, AI summary", 0.7, 1.8, 6.9, 3.95),
         (crop('05-findings-fix.png', (248, 140, 1648, 658), 'b.png'), 'Evidence and a ready fix snippet per finding', 7.85, 1.8, 4.78, 1.85),
         (crop('06-chat-tool-trace.png', (0, 545, 940, 921), 'c.png'), 'Agent chat with a collapsible tool trace', 7.85, 4.1, 4.78, 1.85)]
@@ -266,11 +266,11 @@ for p, cap, x, y, w, h in imgs:
     card(s, x, y, w, h + 0.55, WHITE, LINE, 0.03)
     s.shapes.add_picture(p, Inches(x + 0.07), Inches(y + 0.07), width=Inches(w - 0.14), height=Inches(h - 0.14))
     text(s, x + 0.1, y + h - 0.05, w - 0.2, 0.55, (cap, 12.5, True, INK), anchor=MSO_ANCHOR.MIDDLE)
-mods = [('01', 'Audit engine', EMERALD), ('02', 'AI summary + chat', FUCHSIA), ('03', 'Compare + trend', AMETHYST), ('04', 'Scheduled audits', SAPPHIRE), ('05', 'JS rendering', AMBER)]
+mods = [('01', 'Audit engine', EMERALD), ('02', 'AI summary + chat', FUCHSIA), ('03', 'Compare + trend', AMETHYST), ('04', 'History + sign-in', RUBY), ('05', 'Scheduled audits', SAPPHIRE), ('06', 'JS rendering', AMBER)]
 for i, (n, a, col) in enumerate(mods):
-    x = 0.7 + i * 2.4
-    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 6.56, 2.28, 0.4, SOFT[col], None, 0.3)
-    text(s, x + 0.08, 6.56, 2.15, 0.4, [(f'{n}  {a}', 12.5, True, INK)], anchor=MSO_ANCHOR.MIDDLE)
+    x = 0.7 + i * 2.0
+    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 6.56, 1.92, 0.4, SOFT[col], None, 0.3)
+    text(s, x + 0.06, 6.56, 1.85, 0.4, [(f'{n}  {a}', 11, True, INK)], anchor=MSO_ANCHOR.MIDDLE)
 
 # ================================================================ 9 Live demo flow
 s = new('Live demo sequence', 'Bad page to good page in four minutes',
@@ -298,7 +298,7 @@ s = new('Measure functionality, not invented results', 'Security & Testing Check
     f"Counts are from the last npm test run. Live-model behaviour: npm run test:live ({T['live']} tests, opt-in) and npm run check:llm.", (
     "Kyunki hum user ka diya URL fetch karte hain, SSRF guard zaroori hai: sirf http aur https, private aur localhost addresses block, metadata address block, max 3 redirects, 10 second timeout, 2 MB limit.\n"
     "Login JWT se hai, passwords bcrypt se hash hote hain, helmet aur rate limit lage hain, aur ek user doosre ka audit nahi dekh sakta.\n"
-    f"Testing mein {NT} tests hain aur sab pass hote hain: {T['audit']} checker aur scoring, {T['ssrf']} SSRF, {T['api']} API aur auth, {T['agent']} agent, {T['features']} nayi features ke (render, schedule, short refs), aur {T['mcp']} MCP ke.\n"
+    f"Testing mein {NT} tests hain aur sab pass hote hain: {T['audit']} checker aur scoring, {T['ssrf']} SSRF, {T['api']} API aur auth, {T['agent']} agent, {T['features']} nayi features ke (render, schedule, short refs), {T['history']} history aur sign-in ke, aur {T['mcp']} MCP ke.\n"
     f"Asli local model ke liye alag opt-in suite hai, npm run test:live, jisme {T['live']} tests asli qwen2.5:3b par chalte hain."))
 card(s, 0.7, 1.95, 6.2, 4.85)
 text(s, 1.0, 2.05, 5.6, 0.45, ('Security layers', 20, True, AMETHYST))
@@ -313,11 +313,11 @@ text(s, 7.2, 1.98, 5.43, 1.15, (f'{NT} / {NT}', 54, True, WHITE), PP_ALIGN.CENTE
 text(s, 7.2, 3.1, 5.43, 0.5, ('tests passing  ·  npm test', 15, False, 'F5D0FE'), PP_ALIGN.CENTER)
 card(s, 7.2, 4.0, 5.43, 2.8)
 rows = [('Checkers, scoring, compare', T['audit']), ('SSRF guard', T['ssrf']), ('Auth, API, ownership', T['api']), ('Agent, summary, SSE chat', T['agent']),
-        ('Render, schedules, short refs, links', T['features']), ('MCP stdio client', T['mcp'])]
+        ('Render, schedules, short refs, links', T['features']), ('History, sessions, sign-up and sign-in', T['history']), ('MCP stdio client', T['mcp'])]
 for i, (a, b) in enumerate(rows):
-    y = 4.08 + i * 0.43
-    text(s, 7.4, y, 0.4, 0.4, ('✓', 14, True, EMERALD), anchor=MSO_ANCHOR.MIDDLE)
-    text(s, 7.8, y, 3.8, 0.4, (a, 12.5, False, INK), anchor=MSO_ANCHOR.MIDDLE); text(s, 11.6, y, 0.85, 0.4, (str(b), 14, True, AMETHYST), PP_ALIGN.RIGHT, MSO_ANCHOR.MIDDLE)
+    y = 4.05 + i * 0.37
+    text(s, 7.4, y, 0.4, 0.36, ('✓', 13, True, EMERALD), anchor=MSO_ANCHOR.MIDDLE)
+    text(s, 7.8, y, 3.8, 0.36, (a, 12, False, INK), anchor=MSO_ANCHOR.MIDDLE); text(s, 11.6, y, 0.85, 0.36, (str(b), 13, True, AMETHYST), PP_ALIGN.RIGHT, MSO_ANCHOR.MIDDLE)
 
 # ================================================================ 11 Learning / challenges / future
 s = new('What this project taught me', 'Learning Outcomes & Future Scope',
@@ -327,14 +327,14 @@ s = new('What this project taught me', 'Learning Outcomes & Future Scope',
     "Local model CPU par slow hai, isliye summary background mein, queue, aur server start par auto warm-up. JavaScript se bane pages ke liye optional headless render add kiya.\n"
     "Future: bada ya fine-tuned model, docs par RAG, email alerts, CI integration, aur zyada checks."))
 cols = [('Learning outcomes', EMERALD, ['Full-stack MERN with auth', 'JWT, validation, SSRF defence', 'Agent loop and tool calling', 'MCP: one registry, two clients', 'Testing with a mock LLM and a live one'], '✓'),
-        ('Challenges solved', AMBER, ['A 3B model mangled an audit ID: short refs and title lookup', 'CPU LLM takes 15 to 40 s: background summary, queue, auto warm-up', 'JavaScript-built pages: optional headless render, SSRF-guarded'], '!'),
+        ('Challenges solved', AMBER, ['A 3B model mangled an audit ID: short refs and title lookup', 'CPU LLM takes 15 to 40 s: background summary, queue, auto warm-up', 'JavaScript-built pages: optional headless render, SSRF-guarded', 'Demo DB reset left a stale login ("Audit not found"): on-disk DB and session check'], '!'),
         ('Future enhancements', FUCHSIA, ['Larger or fine-tuned models', 'RAG over WCAG and OWASP docs', 'Email alerts for scheduled audits', 'CI integration (fail on low score)', 'More checks and Lighthouse-style metrics'], None)]
 for i, (h, col, items, mark) in enumerate(cols):
     x = 0.7 + i * 4.05
     card(s, x, 1.95, 3.85, 4.85); shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.95, 3.85, 0.65, col, None, 0.25)
     text(s, x + 0.2, 1.95, 3.4, 0.65, (h, 18, True, WHITE), anchor=MSO_ANCHOR.MIDDLE)
     for k, t in enumerate(items):
-        y = 2.8 + k * (0.78 if i != 1 else 1.3)
+        y = 2.8 + k * (0.78 if i != 1 else 0.98)
         if mark: text(s, x + 0.15, y, 0.4, 0.5, (mark, 16, True, col), anchor=MSO_ANCHOR.TOP)
         else: num(s, x + 0.18, y + 0.04, f'0{k + 1}', col, d=0.36, size=10.5)
         text(s, x + 0.6, y, 3.15, 0.75, (t, 14, False, INK))

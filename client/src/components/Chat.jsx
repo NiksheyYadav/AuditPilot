@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { streamChat } from '../lib/api.js';
+import { api, streamChat } from '../lib/api.js';
 import { Md } from './ui.jsx';
 
 const SUGGESTIONS = ['What should I fix first?', 'Explain the security score', 'How does this compare with my previous audits?'];
@@ -51,7 +51,8 @@ export default function Chat({ auditId, initial = [], llm }) {
         else if (ev === 'done') patchLast((m) => ({ ...m, thinking: false, content: m.content || d.content || m.content }));
       });
     } catch (e) {
-      patchLast((m) => ({ ...m, thinking: false, error: e.message }));
+      const gone = e.status === 404;
+      patchLast((m) => ({ ...m, thinking: false, error: gone ? 'This audit no longer exists (it was deleted, or the demo database was reset). Open History to pick another audit.' : e.message }));
     } finally {
       patchLast((m) => ({ ...m, thinking: false }));
       setBusy(false);
@@ -63,6 +64,7 @@ export default function Chat({ auditId, initial = [], llm }) {
       <div className="chat-head">
         <h2>Ask the audit agent</h2>
         <span className="muted small">{llm?.mock ? 'Scripted mock replies' : `Runs locally on ${llm?.model || 'your machine'}`}</span>
+        {msgs.length > 0 && !busy && <button className="btn ghost tiny" onClick={async () => { if (window.confirm('Clear the saved chat history for this audit?')) { try { await api.clearChat(auditId); setMsgs([]); } catch { /* shown on next send */ } } }}>Clear chat</button>}
       </div>
       <div className="chat-body">
         {!msgs.length && (
