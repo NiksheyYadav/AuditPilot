@@ -6,6 +6,26 @@ A logged-in user enters a URL. **Deterministic tools** audit it (SEO, accessibil
 
 Built by Nikshey Yadav (Roll No. 231302221, B.Tech CSE Data Science, SGT University) for the AccioJobs industrial training project.
 
+## New device? One command
+
+Clone the repo, then run the setup script. It is safe to re-run and does everything: checks the hardware, installs **Node.js 22+** and **Ollama** if missing, pulls a tool-calling model that fits the machine, installs all npm packages, creates `server/.env`, warms the model and starts the app.
+
+```bash
+git clone https://github.com/NiksheyYadav/AuditPilot.git
+cd AuditPilot
+```
+
+| OS | Command |
+|---|---|
+| Windows | `setup.bat` |
+| macOS / Linux | `./setup.sh` |
+
+Options: `-NoRun` / `--no-run` (install only), `-DryRun` / `--dry-run` (show what it detected and would do), `-Model qwen2.5:7b` / `--model qwen2.5:7b` (force a model).
+
+**CUDA / GPU:** nothing to configure. If an NVIDIA GPU with a working driver is present, Ollama uses it automatically, and the script reads its VRAM to pick the model: **8 GB or more VRAM -> `qwen2.5:7b`**, otherwise `qwen2.5:3b`. Without an NVIDIA GPU, `qwen2.5:7b` is used only when at least 10 GB of RAM is free (Apple Silicon with 16 GB or more also gets 7b); everything else gets `qwen2.5:3b`. The script prints whether the model ended up on the GPU or the CPU. If a GPU exists but its driver is missing, it says so and carries on with the CPU. Node and MongoDB never need the GPU.
+
+Notes: Windows setup uses `winget`; macOS uses `brew` for Ollama; Linux uses the official Ollama installer (needs `sudo`) and `nvm` for Node (no `sudo`). The first run downloads a MongoDB binary (about 120 MB) and the model. Rendering JavaScript pages needs Chrome, Edge or Chromium (optional; the app works without it). Tested on Windows 11; the macOS/Linux script is syntax-checked but has not been run on those systems, and the CUDA branch was tested with a stubbed `nvidia-smi`, not on real NVIDIA hardware.
+
 ## Quick start
 
 Requirements: Node 22+ (tested on Node 24), npm. Ollama is optional (see below).
