@@ -63,7 +63,7 @@ export default function Report() {
       <div className="row between wrap gap noprint">
         <div><Link to="/" className="muted small">&larr; Dashboard</Link>
           <h1 className="url-title">{host(audit.url)}</h1>
-          <p className="muted small">{audit.finalUrl} &middot; {fmtDate(audit.createdAt)} &middot; audited in {audit.durationMs} ms</p></div>
+          <p className="muted small">{audit.rendered && <span className="badge live">JS rendered</span>} {audit.finalUrl} &middot; {fmtDate(audit.createdAt)} &middot; audited in {audit.durationMs} ms</p></div>
         <div className="row gap wrap">
           {others.length > 0 && <select aria-label="Compare with" value="" onChange={(e) => e.target.value && nav(`/compare?a=${e.target.value}&b=${audit.id}`)}><option value="">Compare with...</option>{others.map((o) => <option key={o.id} value={o.id}>{host(o.url)} - {o.scores.overall} - {fmtDate(o.createdAt)}</option>)}</select>}
           <button className="btn ghost" onClick={() => download(`auditpilot-${host(audit.url).replace(/[^a-z0-9]+/gi, '-')}.md`, toMarkdown(audit))}>Export Markdown</button>

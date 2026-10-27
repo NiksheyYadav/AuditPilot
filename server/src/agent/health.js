@@ -20,3 +20,12 @@ export async function llmHealth({ force = false } = {}) {
   cache = { at: Date.now(), value };
   return value;
 }
+
+/** Loads the model into memory (native /api/generate with no prompt) and keeps it there. */
+export async function warmModel(keep = process.env.WARMUP_KEEP_ALIVE || '30m') {
+  const root = cfg.llmBaseUrl.replace(/\/v1\/?$/, '');
+  const t0 = Date.now();
+  const r = await fetch(`${root}/api/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: cfg.llmModel, keep_alive: keep }), signal: AbortSignal.timeout(300000) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return Date.now() - t0;
+}

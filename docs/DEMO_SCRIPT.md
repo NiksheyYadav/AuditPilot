@@ -21,6 +21,7 @@
 | 2:30 | Back to Dashboard, click **Audit demo (good)**. | "Wahi page, fixes ke baad. Score 96." |
 | 2:50 | Report -> **Compare with...** -> choose the bad audit (or use Compare page: A = bad, B = good). | "Score 54 se 96, aur yahan fixed issues ki list hai. Sirf HTTPS bacha, kyunki local demo http par hai." |
 | 3:20 | Click **Export Markdown** (or Print). Show the trend chart on the dashboard. | "Report export ho sakti hai, aur har URL ka trend chart bhi hai." |
+| 3:30 | Click **Audit nikshey.xyz** (a real website). Tick **Render JavaScript** if you want to show it. Open **Scheduled audits** and schedule it daily. | "Ye real website hai, nikshey.xyz. Same engine, aur scheduled audit se har din apne aap re-audit hota hai." |
 | 3:40 | Switch to Claude Code (or Claude Desktop). Type: "Use auditpilot to audit http://localhost:4000/demo/bad". | "Same tools MCP server ke through Claude Code mein bhi chalte hain. Ek tool registry, do clients." |
 | 4:00 | Done. | "Security: SSRF guard, JWT, ownership checks, aur tests pass hain. Questions?" |
 

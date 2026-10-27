@@ -26,7 +26,7 @@ export const TOOLS = [
   {
     name: 'get_audit', mcpName: 'get_audit',
     description: "Get one of the user's audits by id (default: the current audit).",
-    schema: z.object({ audit_id: z.string().min(8).max(40).optional() }),
+    schema: z.object({ audit_id: z.string().min(6).max(40).optional() }),
     handler: async (ctx, { audit_id }) => view(await findOwned(ctx.userId, audit_id || ctx.auditId)),
     summarize: (r) => `${r.url} overall ${r.scores.overall}/100, ${r.topFindings.length} top findings`,
   },
@@ -43,7 +43,7 @@ export const TOOLS = [
   {
     name: 'compare_audits', mcpName: 'compare_audits',
     description: 'Compare two audits (default: most recent other audit vs the current one).',
-    schema: z.object({ audit_id_a: z.string().min(8).max(40).optional(), audit_id_b: z.string().min(8).max(40).optional() }),
+    schema: z.object({ audit_id_a: z.string().min(6).max(40).optional(), audit_id_b: z.string().min(6).max(40).optional() }),
     handler: async (ctx, { audit_id_a, audit_id_b }) => {
       const recent = await Audit.find({ user: ctx.userId }).sort({ createdAt: -1 }).limit(6).select('url scores');
       const valid = () => recent.map((x) => `${x._id} (${x.url}, ${x.scores.overall})`).join('; ');
@@ -60,11 +60,17 @@ export const TOOLS = [
   },
   {
     name: 'get_remediation', mcpName: 'get_remediation',
-    description: 'Get fix instructions and a code snippet for a check id (e.g. sec-csp).',
+    description: 'Get fix steps and a code snippet for a finding (its title or check id).',
     schema: z.object({ check_id: z.string().min(3).max(40) }),
     handler: async (ctx, { check_id }) => {
-      const r = getRemediation(check_id);
-      if (!r) throw new Error(`Unknown check id: ${check_id}`);
+      let id = check_id, r = getRemediation(id);
+      if (!r && ctx.auditId) { // small models pass the finding title: resolve it against the current audit
+        const a = await findOwned(ctx.userId, ctx.auditId).catch(() => null);
+        const hit = a?.findings.find((f) => f.title.toLowerCase() === check_id.toLowerCase()) || a?.findings.find((f) => f.title.toLowerCase().includes(check_id.toLowerCase()));
+        if (hit) { id = hit.id; r = getRemediation(id); }
+      }
+      if (!r) throw new Error(`Unknown finding: ${check_id}`);
+      check_id = id;
       return { check_id, summary: r.summary, snippets: r.snippets.slice(0, 2).map((s) => ({ label: s.label, code: clip(s.code, 500) })) };
     },
     summarize: (r) => `fix for ${r.check_id}`,

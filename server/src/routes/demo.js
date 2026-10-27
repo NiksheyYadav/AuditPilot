@@ -35,6 +35,13 @@ demoRouter.get('/demo/good', (req, res) => {
     'Cache-Control': 'public, max-age=300', 'Set-Cookie': 'visit=1; Path=/; HttpOnly; Secure; SameSite=Lax',
   }).send(goodGz);
 });
+// Client-side rendered page: plain HTML has no title/H1/alt; the DOM after JavaScript is fine. Used to demo "Render JavaScript".
+const spa = Buffer.from(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div id="app"></div><script>
+document.title = 'Client Rendered Demo Page for AuditPilot';
+var m = document.createElement('meta'); m.name = 'description'; m.content = 'This page builds its content with JavaScript, so a plain HTML audit sees almost nothing while a rendered audit sees everything.'; document.head.appendChild(m);
+document.getElementById('app').innerHTML = '<main><h1>Rendered with JavaScript</h1><h2>Hello</h2><img src="/demo/assets/logo.svg" alt="Logo"></main>';
+</script></body></html>`);
+demoRouter.get('/demo/spa', (req, res) => res.type('html').send(spa));
 demoRouter.get('/demo/about', (req, res) => res.type('html').send(about));
 demoRouter.get('/demo/assets/:file', (req, res) => {
   const a = assets[req.params.file];

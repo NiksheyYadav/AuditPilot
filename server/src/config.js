@@ -15,6 +15,7 @@ export const cfg = {
   // true: stream while tool calls may happen. false: non-streaming rounds, finished answer is emitted at the end.
   get streamWithTools() { return env('LLM_STREAM_TOOLS', 'true') === 'true'; },
   get llmTimeoutMs() { return Number(env('LLM_TIMEOUT_MS', 120000)); },
+  get maxLinks() { return Math.min(100, Math.max(1, Number(env('AUDIT_MAX_LINKS', 50)))); },
   get clientOrigin() { return env('CLIENT_ORIGIN', 'http://localhost:5173'); },
 };
 

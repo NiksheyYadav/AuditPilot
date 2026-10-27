@@ -5,7 +5,7 @@ import { requireAuth, validate } from '../middleware/index.js';
 import { brief, createAudit, decorate, findOwned } from '../services/auditService.js';
 import { compareAudits } from '../audit/compare.js';
 
-const createSchema = z.object({ url: z.string().trim().min(3).max(2048) });
+const createSchema = z.object({ url: z.string().trim().min(3).max(2048), render: z.boolean().optional() });
 const compareSchema = z.object({ a: z.string(), b: z.string() });
 const trendSchema = z.object({ url: z.string().trim().min(3).max(2048) });
 
@@ -18,7 +18,7 @@ export const withAuditLimiter = (limiter) => auditsRouter.post('/', limiter);
 auditsRouter.post('/', validate(createSchema), async (req, res) => {
   let url = req.valid.url;
   if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
-  const audit = await createAudit(req.user.id, url);
+  const audit = await createAudit(req.user.id, url, { render: req.valid.render });
   res.status(201).json(decorate(audit));
 });
 

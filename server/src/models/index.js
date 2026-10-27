@@ -27,6 +27,7 @@ const auditSchema = new mongoose.Schema({
   url: { type: String, required: true },
   finalUrl: String,
   status: { type: String, enum: ['done', 'failed'], default: 'done' },
+  rendered: { type: Boolean, default: false }, // DOM evaluated after JavaScript ran (headless browser)
   scores: { overall: Number, seo: Number, accessibility: Number, security: Number, performance: Number },
   findings: [findingSchema],
   summary: { type: String, default: '' },
@@ -40,5 +41,16 @@ const auditSchema = new mongoose.Schema({
 }, { timestamps: true });
 auditSchema.index({ user: 1, url: 1, createdAt: -1 });
 
+const scheduleSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  url: { type: String, required: true },
+  everyHours: { type: Number, required: true, min: 1, max: 168 },
+  render: { type: Boolean, default: false },
+  enabled: { type: Boolean, default: true },
+  nextRunAt: { type: Date, required: true, index: true },
+  lastRunAt: Date, lastAuditId: mongoose.Schema.Types.ObjectId, lastError: String,
+}, { timestamps: true });
+
+export const Schedule = mongoose.models.Schedule || mongoose.model('Schedule', scheduleSchema);
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
 export const Audit = mongoose.models.Audit || mongoose.model('Audit', auditSchema);

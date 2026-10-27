@@ -4,11 +4,11 @@ const F = (id, category, severity, title, evidence, recommendation = 'No action 
   ({ id, category, severity, title, evidence, recommendation });
 
 /** Build the context object every checker receives. `probe(url, method)` -> {status}|null. */
-export function buildCtx({ url, html, headers = {}, status = 200, timeMs = 0, bytes, wireBytes, encoding = '', probe }) {
+export function buildCtx({ url, html, headers = {}, status = 200, timeMs = 0, bytes, wireBytes, encoding = '', probe, maxLinks = 50 }) {
   const h = {};
   for (const [k, v] of Object.entries(headers)) h[k.toLowerCase()] = v;
   const size = bytes ?? Buffer.byteLength(html || '');
-  return { url, html: html || '', $: cheerio.load(html || ''), headers: h, status, timeMs, bytes: size, wireBytes: wireBytes ?? size, encoding, probe: probe || (async () => null) };
+  return { url, html: html || '', $: cheerio.load(html || ''), headers: h, status, timeMs, bytes: size, wireBytes: wireBytes ?? size, encoding, maxLinks, probe: probe || (async () => null) };
 }
 
 const hdr = (ctx, n) => { const v = ctx.headers[n]; return Array.isArray(v) ? v.join(', ') : v; };
@@ -69,7 +69,8 @@ async function seoBrokenLinks(ctx) {
       if ((u.protocol === 'http:' || u.protocol === 'https:') && u.origin === origin) { u.hash = ''; set.add(u.href); }
     } catch { /* ignore */ }
   });
-  const links = [...set].slice(0, 20);
+  const links = [...set].slice(0, ctx.maxLinks);
+  const of = set.size > links.length ? ` (of ${set.size} found)` : '';
   if (!links.length) return F('seo-broken-links', 'seo', 'pass', 'Broken links', 'No same-origin links to check.');
   const broken = [];
   let i = 0;
@@ -80,8 +81,8 @@ async function seoBrokenLinks(ctx) {
       if (!r || (r.status >= 400 && r.status !== 405 && r.status !== 501)) broken.push(`${new URL(l).pathname} (${r ? r.status : 'error'})`);
     }
   }));
-  if (!broken.length) return F('seo-broken-links', 'seo', 'pass', 'Broken links', `${links.length} same-origin links checked, none broken.`);
-  return F('seo-broken-links', 'seo', broken.length >= 3 ? 'high' : 'medium', 'Broken links', `${broken.length} of ${links.length} links broken: ${broken.join(', ')}.`, 'Fix or remove the broken links.');
+  if (!broken.length) return F('seo-broken-links', 'seo', 'pass', 'Broken links', `${links.length} same-origin links checked${of}, none broken.`);
+  return F('seo-broken-links', 'seo', broken.length >= 3 ? 'high' : 'medium', 'Broken links', `${broken.length} of ${links.length} links${of} broken: ${broken.join(', ')}.`, 'Fix or remove the broken links.');
 }
 
 /* ---------------- Accessibility ---------------- */

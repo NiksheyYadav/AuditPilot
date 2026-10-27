@@ -10,7 +10,11 @@ const section = (sys, name) => {
   const m = new RegExp(`${name}:\\n([\\s\\S]*?)(?:\\n\\n|$)`).exec(sys);
   return m ? m[1].split('\n').filter((l) => l.startsWith('- ')) : [];
 };
-const parseFinding = (l) => { const [id, sev, title, ...ev] = l.slice(2).split(' | '); return { id: id.replace('id=', ''), sev, title, evidence: ev.join(' | ') }; };
+const parseFinding = (l) => {
+  const p = l.slice(2).split(' | ');
+  if (p[0].startsWith('id=')) { const [id, sev, title, ...ev] = p; return { id: id.slice(3), sev, title, evidence: ev.join(' | ') }; }
+  const [sev, title, ...ev] = p; return { id: title, sev, title, evidence: ev.join(' | ') };
+};
 
 function summaryText(sys) {
   const scores = /SCORES: (.*)/.exec(sys)?.[1] || '';

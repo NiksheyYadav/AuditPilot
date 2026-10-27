@@ -29,12 +29,21 @@ Then open http://localhost:5173, log in and press **Audit demo (bad)** and **Aud
 |---|---|
 | `npm run setup` | install everything, create `server/.env` |
 | `npm run dev` | server + client together |
+| `npm run test:live` | opt-in tests against the REAL local model (needs Ollama running) |
 | `npm run seed` | seed a persistent DB (only needed when `MONGO_URI` is set; the in-memory DB seeds itself) |
 | `npm test` | all server tests (vitest + supertest + mongodb-memory-server) |
 | `npm run check:llm` | checks Ollama, the model, one tool-call round trip, prints latency |
 | `npm run warmup:llm` | loads the model into RAM before the demo |
 | `npm run mcp` | starts the MCP stdio server |
 | `npm run build` | production build of the client (served by the API on :4000) |
+
+## What is in the box (beyond the basic audit)
+
+- **Render JavaScript:** tick the checkbox (or send `render: true`) and the page is loaded in a headless Chrome/Edge before the checks run, so client-side apps are audited fairly. No browser is downloaded: it uses the Chrome/Edge/Chromium already installed (or `CHROME_PATH`). Every request the browser makes, including redirects and sub-resources, goes through the same SSRF guard. Try it on `/demo/spa`.
+- **Scheduled audits:** re-audit a URL every 1 h / 6 h / 24 h / 7 d from the dashboard (max 5 per user). Runs happen inside the API process, are saved like normal audits and feed the trend chart.
+- **Link check:** up to `AUDIT_MAX_LINKS` same-origin links (default 50, max 100); the evidence says how many were found.
+- **Model warm-up:** the server loads the Ollama model at startup, so the first answer is not slow.
+- **Small-model friendly agent:** audits are referenced by short 8-character refs, `get_remediation` accepts a finding title, and the chat context contains no raw ids.
 
 ## Local LLM with Ollama
 
@@ -137,8 +146,11 @@ Claude Desktop (`claude_desktop_config.json`):
 
 ## Tests
 
-`npm test` runs checker tests against the bad and good fixtures, scoring, the SSRF guard (localhost, 10.x, 169.254.169.254, redirects, non-http schemes), auth and ownership, the agent loop with the mock LLM (tool call then answer, invalid args, step cap), background summary status transitions, compare, SSE chat, and an MCP stdio client test. Real local-model behaviour is covered by `npm run check:llm` and a manual run, not by CI tests.
+`npm test` runs checker tests against the bad and good fixtures, scoring, the SSRF guard (localhost, 10.x, 169.254.169.254, redirects, non-http schemes), auth and ownership, the agent loop with the mock LLM (tool call then answer, invalid args, step cap), background summary status transitions, compare, SSE chat, JavaScript rendering, schedules, short refs, the link cap and an MCP stdio client test. Real local-model behaviour has its own opt-in suite, `npm run test:live` (summary quality, streamed answer, a real tool call), plus `npm run check:llm`.
 
 ## Known limitations
 
-Static HTML only (no JavaScript rendering); at most 20 links are checked; a 3B local model on CPU answers in roughly 15-30 s and can be imprecise (that is why scores never depend on it); the in-memory DB resets on restart; no scheduled audits yet.
+- A 3B local model on CPU answers in roughly 15-40 s and can be imprecise (that is why scores never depend on it).
+- Rendering JavaScript needs an installed Chrome/Edge/Chromium and takes longer (about 5-30 s per audit).
+- The in-memory demo DB resets on restart by design; set `MONGO_URI` (Atlas free tier) to keep data. Scheduled audits only run while the API process is running.
+- Local demo pages are served over HTTP, so even `/demo/good` loses points on the HTTPS check.

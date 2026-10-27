@@ -112,3 +112,8 @@ label { display: grid; gap: .25rem; font-weight: 600; font-size: .88rem; margin-
   .snippet pre { white-space: pre-wrap; background: #f4f4f4; color: #000; } .snippet-head { background: #ddd; color: #000; }
 }
 .md-code { background: #1a1438; color: #e9e5ff; padding: .7rem; border-radius: 8px; overflow-x: auto; font-size: .78rem; margin: .5rem 0; }
+
+.live-btn { background: #e0e7ff; color: #3730a3; } .btn.live-btn:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(55, 48, 163, .2); }
+.sched-form { display: flex; gap: .6rem; margin: .8rem 0; flex-wrap: wrap; } .sched-form input { flex: 1; min-width: 200px; }
+.sched-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 0; border-top: 1px solid var(--line); }
+.hero-card .check { margin: .2rem 0 .8rem; }

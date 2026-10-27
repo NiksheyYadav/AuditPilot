@@ -37,10 +37,10 @@ User ka sawal aata hai, agent model ko audit context ke saath bhejta hai. Model 
 Vitest aur supertest se: har checker bad/good HTML par, scoring, SSRF guard, auth aur ownership, agent loop (mock LLM ke saath), background summary status, compare aur MCP stdio test. Asli local model ka behaviour `npm run check:llm` aur manual run se check kiya, kyunki wo CI ke liye reliable nahi hai.
 
 **13. Limitations kya hain?**
-Sirf static HTML audit hota hai (JavaScript render nahi hota), sirf 20 links check hote hain, local model slow aur kabhi imprecise hai, in-memory demo DB restart par reset hota hai, aur scheduled audits abhi nahi hain.
+Local model CPU par slow hai (15 se 40 second) aur kabhi imprecise hota hai, isliye scores kabhi LLM par depend nahi karte. JavaScript render ke liye Chrome ya Edge installed hona chahiye. In-memory demo DB restart par reset hota hai (Atlas se persistent ho jata hai), aur scheduled audits tabhi chalte hain jab server chal raha ho.
 
 **14. Future scope kya hai?**
-Bada ya fine-tuned model, docs par RAG (WCAG/OWASP references), scheduled audits aur email alerts, CI/CD integration (build fail agar score gire), headless browser se JavaScript-rendered pages, aur zyada checks.
+Bada ya fine-tuned model, WCAG aur OWASP docs par RAG, scheduled audits ke email alerts, CI/CD integration (score gire to build fail), aur zyada checks jaise Lighthouse-style metrics.
 
 **15. Training mein kya kya seekha aur kya extra kiya?**
 Training mein HTML, CSS, JavaScript, React, AI, AI agents, thoda Node.js aur MCP basics cover hue. Express, MongoDB aur JWT training mein nahi the, unhe maine Claude Code ke saath AI-assisted development se seekha aur use kiya.
