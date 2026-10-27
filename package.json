@@ -4,7 +4,7 @@
   "private": true,
   "description": "AuditPilot - AI website audit agent (MERN, local Ollama LLM)",
   "scripts": {
-    "setup": "node scripts/ensure-env.js && npm install && npm install --prefix server && npm install --prefix client",
+    "setup": "node scripts/ensure-env.mjs && npm install && npm install --prefix server && npm install --prefix client",
     "dev": "concurrently -n server,client -c magenta,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "seed": "npm run seed --prefix server",
     "test": "npm test --prefix server",
