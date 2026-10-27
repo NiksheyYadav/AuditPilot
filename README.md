@@ -159,3 +159,4 @@ Claude Desktop (`claude_desktop_config.json`):
 - Rendering JavaScript needs an installed Chrome/Edge/Chromium and takes longer (about 5-30 s per audit).
 - The demo DB is a local file database (`server/.data/mongo`); use `MONGO_URI` (Atlas free tier) for a hosted one. `npm run mcp` while the API is running uses its own in-memory DB unless you give it the same `MONGO_URI`. Scheduled audits only run while the API process is running.
 - Local demo pages are served over HTTP, so even `/demo/good` loses points on the HTTPS check.
+# AuditPilot
