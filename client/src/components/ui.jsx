@@ -65,8 +65,7 @@ export function Md({ text }) {
     } else { flush(); if (line) out.push(<p key={i}>{inline(line.replace(/^#+\s*/, ''))}</p>); }
   });
   flush();
-  if (code) out.push(<pre key="cend" className="md-code"><code>{code.join('
-')}</code></pre>);
+  if (code) out.push(<pre key="cend" className="md-code"><code>{code.join('\n')}</code></pre>);
   return <div className="md">{out}</div>;
 }
 
