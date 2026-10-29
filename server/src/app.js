@@ -7,20 +7,23 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { cfg, describeLlm } from './config.js';
 import { demoRouter } from './routes/demo.js';
+import { demoSiteRouter } from './routes/demoSite.js';
 import { authRouter } from './routes/auth.js';
 import { auditsRouter } from './routes/audits.js';
 import { chatRouter } from './routes/chat.js';
 import { schedulesRouter } from './routes/schedules.js';
+import { sitesRouter } from './routes/sites.js';
 import { findBrowser } from './audit/render.js';
 import { errorHandler, notFound, requireAuth } from './middleware/index.js';
 import { llmHealth } from './agent/health.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-export function createApp({ auditRateLimit = cfg.auditRateLimit, chatRateLimit = cfg.chatRateLimit } = {}) {
+export function createApp({ auditRateLimit = cfg.auditRateLimit, chatRateLimit = cfg.chatRateLimit, siteRateLimit = cfg.siteRateLimit } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(demoRouter); // before helmet: demo targets control their own headers
+  app.use(demoSiteRouter);
   app.use(helmet());
   app.use(cors({ origin: cfg.clientOrigin }));
   app.use(express.json({ limit: '100kb' }));
@@ -35,6 +38,7 @@ export function createApp({ auditRateLimit = cfg.auditRateLimit, chatRateLimit =
   app.get('/api/health', async (req, res) => res.json({ status: 'ok', llm: { ...describeLlm(), ...(await llmHealth()) }, allowPrivateTargets: cfg.allowPrivate, renderAvailable: Boolean(findBrowser()), demoBase: `http://localhost:${cfg.port}` }));
   app.use('/api/auth', authLimiter, authRouter);
   app.use('/api/schedules', schedulesRouter);
+  app.use('/api/sites', sitesRouter(perUser(siteRateLimit)));
   app.post('/api/audits', requireAuth, perUser(auditRateLimit));
   app.use('/api/audits', chatRouter(perUser(chatRateLimit)));
   app.use('/api/audits', auditsRouter);

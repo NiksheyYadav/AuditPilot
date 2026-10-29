@@ -28,6 +28,7 @@ const auditSchema = new mongoose.Schema({
   finalUrl: String,
   status: { type: String, enum: ['done', 'failed'], default: 'done' },
   rendered: { type: Boolean, default: false }, // DOM evaluated after JavaScript ran (headless browser)
+  site: { type: mongoose.Schema.Types.ObjectId, ref: 'SiteAudit', index: true }, // set when this page audit belongs to a site crawl
   scores: { overall: Number, seo: Number, accessibility: Number, security: Number, performance: Number },
   findings: [findingSchema],
   summary: { type: String, default: '' },
@@ -51,6 +52,34 @@ const scheduleSchema = new mongoose.Schema({
   lastRunAt: Date, lastAuditId: mongoose.Schema.Types.ObjectId, lastError: String,
 }, { timestamps: true });
 
+const scoresSchema = { overall: Number, seo: Number, accessibility: Number, security: Number, performance: Number };
+const siteSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  url: { type: String, required: true },
+  origin: String,
+  status: { type: String, enum: ['running', 'done', 'failed'], default: 'running' },
+  error: String,
+  maxPages: Number,
+  rendered: { type: Boolean, default: false },
+  progress: { done: { type: Number, default: 0 }, total: { type: Number, default: 0 }, current: String },
+  pages: [{
+    _id: false, url: String, audit: { type: mongoose.Schema.Types.ObjectId, ref: 'Audit' },
+    title: String, description: String, scores: scoresSchema, issues: Number,
+  }],
+  broken: [{ _id: false, url: String, status: Number, from: String, error: String }],
+  skipped: [{ _id: false, url: String, reason: String }],
+  crossFindings: [findingSchema],
+  scores: scoresSchema,
+  summary: { type: String, default: '' },
+  fixPlan: { type: String, default: '' },
+  aiStatus: { type: String, enum: ['pending', 'ready', 'skipped', 'failed'], default: 'skipped' },
+  aiError: String,
+  llm: { provider: String, model: String, mock: Boolean },
+  durationMs: Number,
+}, { timestamps: true });
+siteSchema.index({ user: 1, createdAt: -1 });
+
+export const SiteAudit = mongoose.models.SiteAudit || mongoose.model('SiteAudit', siteSchema);
 export const Schedule = mongoose.models.Schedule || mongoose.model('Schedule', scheduleSchema);
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
 export const Audit = mongoose.models.Audit || mongoose.model('Audit', auditSchema);

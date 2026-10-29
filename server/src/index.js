@@ -3,12 +3,15 @@ import { connectDb, disconnectDb } from './db.js';
 import { cfg } from './config.js';
 import { seedDemo } from './scripts/seed.js';
 import { startScheduler } from './services/scheduler.js';
+import { markStaleSiteAudits } from './services/siteService.js';
 import { warmModel } from './agent/health.js';
 
 if (cfg.allowPrivate) console.warn('[warn] ALLOW_PRIVATE_TARGETS=true: SSRF protection for private addresses is OFF. Use for local demo only.');
 if (cfg.jwtSecret === 'dev-only-secret-change-me') console.warn('[warn] JWT_SECRET not set, using an insecure dev default.');
 
 await connectDb();
+const stale = await markStaleSiteAudits();
+if (stale) console.warn(`[sites] marked ${stale} interrupted site audit(s) as failed`);
 const server = createApp().listen(cfg.port, async () => {
   console.log(`AuditPilot API on http://localhost:${cfg.port}  (LLM: ${cfg.llmProvider}/${cfg.llmModel})`);
   startScheduler();

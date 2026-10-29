@@ -17,6 +17,11 @@ export const cfg = {
   get llmTimeoutMs() { return Number(env('LLM_TIMEOUT_MS', 120000)); },
   // empty MONGO_URI: keep the demo DB on disk (server/.data/mongo) so data survives restarts; false = pure in-memory
   get persistDemoDb() { return env('DEMO_DB_PERSIST', 'true') === 'true'; },
+  get siteRateLimit() { return Number(env('SITE_RATE_LIMIT', 5)); },
+  get crawlMaxPages() { return Math.min(25, Math.max(1, Number(env('SITE_MAX_PAGES', 25)))); },
+  get crawlDelayMs() { return Math.max(0, Number(env('CRAWL_DELAY_MS', 300))); },
+  get crawlTimeoutMs() { return Number(env('CRAWL_TIMEOUT_MS', 300000)); },
+  get crawlRespectRobots() { return env('CRAWL_RESPECT_ROBOTS', 'true') === 'true'; },
   get maxLinks() { return Math.min(100, Math.max(1, Number(env('AUDIT_MAX_LINKS', 50)))); },
   get clientOrigin() { return env('CLIENT_ORIGIN', 'http://localhost:5173'); },
 };

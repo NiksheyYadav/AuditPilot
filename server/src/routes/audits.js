@@ -11,6 +11,7 @@ const listSchema = z.object({
   q: z.string().trim().max(200).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
+  includeSite: z.enum(['0', '1']).optional(),
 });
 const compareSchema = z.object({ a: z.string(), b: z.string() });
 const trendSchema = z.object({ url: z.string().trim().min(3).max(2048) });
@@ -29,8 +30,8 @@ auditsRouter.post('/', validate(createSchema), async (req, res) => {
 });
 
 auditsRouter.get('/', validate(listSchema, 'query'), async (req, res) => {
-  const { q, page, limit } = req.valid;
-  const filter = { user: req.user.id, ...(q ? { url: { $regex: escapeRe(q), $options: 'i' } } : {}) };
+  const { q, page, limit, includeSite } = req.valid;
+  const filter = { user: req.user.id, ...(includeSite === '1' ? {} : { site: null }), ...(q ? { url: { $regex: escapeRe(q), $options: 'i' } } : {}) };
   const [total, list] = await Promise.all([
     Audit.countDocuments(filter),
     Audit.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),

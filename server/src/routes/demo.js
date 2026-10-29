@@ -48,5 +48,5 @@ demoRouter.get('/demo/assets/:file', (req, res) => {
   if (!a) return res.status(404).type('text').send('Not found');
   res.set('Cache-Control', 'public, max-age=300').type(a[0]).send(a[1]);
 });
-demoRouter.get('/robots.txt', (req, res) => res.type('text').send('User-agent: *\nAllow: /\nSitemap: /sitemap.xml\n'));
+demoRouter.get('/robots.txt', (req, res) => res.type('text').send('User-agent: *\nAllow: /\nDisallow: /demo/site/private/\nSitemap: /sitemap.xml\n'));
 demoRouter.get('/sitemap.xml', (req, res) => res.type('xml').send('<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>/demo/good</loc></url></urlset>'));

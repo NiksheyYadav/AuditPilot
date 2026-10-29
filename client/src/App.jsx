@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Report from './pages/Report.jsx';
 import Compare from './pages/Compare.jsx';
 import History from './pages/History.jsx';
+import Site from './pages/Site.jsx';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -68,6 +69,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="audits/:id" element={<Report />} />
             <Route path="history" element={<History />} />
+            <Route path="sites/:id" element={<Site />} />
             <Route path="compare" element={<Compare />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
