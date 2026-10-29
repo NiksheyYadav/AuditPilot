@@ -82,3 +82,13 @@ export async function probe(url, method = 'GET') {
   try { const r = await safeFetch(url, { method, maxBytes: 64 * 1024, timeoutMs: 6000, maxRedirects: 3 }); return { status: r.status }; }
   catch { return null; }
 }
+
+/** probe() with a memo, shared by all pages of one crawl so nav/footer links and robots/sitemap are fetched once. */
+export function makeCachedProbe() {
+  const memo = new Map();
+  return (url, method = 'GET') => {
+    const k = `${method} ${url}`;
+    if (!memo.has(k)) memo.set(k, probe(url, method));
+    return memo.get(k);
+  };
+}

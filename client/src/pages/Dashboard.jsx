@@ -78,13 +78,20 @@ export default function Dashboard() {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [render, setRender] = useState(false);
+  const [wholeSite, setWholeSite] = useState(false);
+  const [pages, setPages] = useState(10);
+  const [sites, setSites] = useState([]);
 
   const load = useCallback(() => api.listAudits().then((r) => setAudits(r.audits)).catch((e) => setErr(e.message)), []);
+  useEffect(() => { api.listSites().then((r) => setSites(r.sites)).catch(() => {}); }, []);
   useEffect(() => { load(); api.health().then(setHealth).catch(() => {}); }, [load]);
 
   async function run(target, tag = 'custom') {
     setErr(''); setBusy(tag);
-    try { const a = await api.createAudit(target, render); nav(`/audits/${a.id}`); }
+    try {
+      if (wholeSite) { const s = await api.createSite(target, Number(pages), render); nav(`/sites/${s.id}`); return; }
+      const a = await api.createAudit(target, render); nav(`/audits/${a.id}`);
+    }
     catch (e) { setErr(e.message); setBusy(''); }
   }
   const demo = (p) => `${health?.demoBase || 'http://localhost:4000'}${p}`;
@@ -100,7 +107,7 @@ export default function Dashboard() {
         </form>
         <label className="check"><input type="checkbox" checked={render} disabled={!!busy || health?.renderAvailable === false} onChange={(e) => setRender(e.target.checked)} /> Render JavaScript (headless browser, for client-side apps){health?.renderAvailable === false && <span className="muted small"> - install Chrome or Edge to enable</span>}</label>
         <div className="row gap wrap">
-          <span className="muted small">Quick audits:</span>
+          <label className="check"><input type="checkbox" checked={wholeSite} disabled={!!busy} onChange={(e) => setWholeSite(e.target.checked)} /> Audit the whole site (crawl)</label> {wholeSite && <select value={pages} onChange={(e) => setPages(e.target.value)} aria-label="Pages to audit"><option value={5}>up to 5 pages</option><option value={10}>up to 10 pages</option><option value={25}>up to 25 pages</option></select>} <span className="muted small">Quick audits:</span>
           <button className="btn live-btn" disabled={!!busy} onClick={() => run('https://nikshey.xyz', 'nik')}>{busy === 'nik' ? 'Auditing...' : 'Audit nikshey.xyz'}</button>
           <button className="btn bad-btn" disabled={!!busy || health?.allowPrivateTargets === false} onClick={() => run(demo('/demo/bad'), 'bad')}>{busy === 'bad' ? 'Auditing...' : 'Audit demo (bad)'}</button>
           <button className="btn good-btn" disabled={!!busy || health?.allowPrivateTargets === false} onClick={() => run(demo('/demo/good'), 'good')}>{busy === 'good' ? 'Auditing...' : 'Audit demo (good)'}</button>
@@ -108,6 +115,18 @@ export default function Dashboard() {
         </div>
         {err && <ErrorBox>{err}</ErrorBox>}
       </section>
+
+      {sites.length > 0 && (
+        <section className="card">
+          <h2>Recent site audits</h2>
+          {sites.slice(0, 5).map((s) => (
+            <div className="sched-row" key={s.id}>
+              <div><Link className="url-link" to={`/sites/${s.id}`}>{host(s.url)}</Link> <span className="muted small">{s.pageCount} pages &middot; {s.status} &middot; {fmtDate(s.createdAt)}</span></div>
+              {s.scores?.overall !== undefined && <span className="score-pill" style={{ background: scoreColor(s.scores.overall) }}>{s.scores.overall}</span>}
+            </div>
+          ))}
+        </section>
+      )}
 
       <Schedules />
 

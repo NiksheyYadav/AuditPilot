@@ -70,6 +70,15 @@ Then open http://localhost:5173, log in and press **Audit demo (bad)** and **Aud
 - **Model warm-up:** the server loads the Ollama model at startup, so the first answer is not slow.
 - **Small-model friendly agent:** audits are referenced by short 8-character refs, `get_remediation` accepts a finding title, and the chat context contains no raw ids.
 
+## Site audits (multi-page crawl)
+
+Tick **Audit the whole site** on the dashboard (or `POST /api/sites {url, maxPages}`; poll `GET /api/sites/:id`). A background job crawls same-origin pages breadth-first, up to 5 / 10 / 25 pages, and every page becomes a normal audit (findings, fix snippets, chat), so nothing about single-page audits changes.
+
+- **Polite and safe:** obeys `robots.txt` (`CRAWL_RESPECT_ROBOTS`), waits `CRAWL_DELAY_MS` between pages, identifies itself as `AuditPilotBot`, and runs every request through the same SSRF guard. A page that redirects to another site is never audited. One crawl per user at a time; `SITE_RATE_LIMIT` per minute.
+- **Site-wide checks:** duplicate page titles (medium), duplicate meta descriptions (low), broken internal pages (medium, high from 3).
+- **Site score:** each category is the average over the audited pages; the site-wide findings then cost 15 / 7 / 3 points in their category (floor 0); overall uses the usual weights. One AI summary is written for the whole site, in the background, like single audits.
+- **Limits:** static link discovery only (links created by JavaScript are found only with the render option), no sitemap seeding yet, a crawl interrupted by an API restart is marked failed. Try it on `/demo/site` (built to include a broken link, duplicate titles and a robots-blocked page).
+
 ## Local LLM with Ollama
 
 1. Install Ollama

@@ -20,10 +20,10 @@ export async function findOwned(userId, id) {
 }
 
 /** Run the deterministic audit, persist it, then generate the AI summary in the background. */
-export async function createAudit(userId, url, { ai = true, render = false } = {}) {
-  const result = await runAudit(url, { render });
+export async function createAudit(userId, url, { ai = true, render = false, result: precomputed, site } = {}) {
+  const result = precomputed || await runAudit(url, { render });
   const audit = await Audit.create({
-    user: userId, url, finalUrl: result.finalUrl, status: 'done', rendered: result.rendered, scores: result.scores, findings: result.findings,
+    user: userId, url, finalUrl: result.finalUrl, status: 'done', site, rendered: result.rendered, scores: result.scores, findings: result.findings,
     durationMs: result.durationMs, aiStatus: ai ? 'pending' : 'skipped', llm: describeLlm(),
   });
   if (ai) scheduleSummary(audit._id);
@@ -40,5 +40,5 @@ export const decorate = (audit) => {
 
 export const brief = (a) => ({
   id: String(a._id), url: a.url, finalUrl: a.finalUrl, scores: a.scores, aiStatus: a.aiStatus, llm: a.llm, createdAt: a.createdAt,
-  rendered: a.rendered, chatCount: (a.chat || []).length, issues: (a.findings || []).filter((f) => f.severity !== 'pass').length, seeded: a.seeded,
+  rendered: a.rendered, site: a.site && String(a.site), chatCount: (a.chat || []).length, issues: (a.findings || []).filter((f) => f.severity !== 'pass').length, seeded: a.seeded,
 });

@@ -6,12 +6,12 @@ import { Empty, ErrorBox, Gauge, Md, MiniScore, Spinner } from '../components/ui
 import Finding from '../components/Finding.jsx';
 import Chat from '../components/Chat.jsx';
 
-function AiCard({ audit }) {
+export function AiCard({ audit, title = 'AI summary and fix plan' }) {
   const { aiStatus: st } = audit;
   return (
     <section className="card ai-card">
       <div className="row between wrap">
-        <h2>AI summary and fix plan</h2>
+        <h2>{title}</h2>
         {audit.seeded && <span className="badge mock" title="Pre-written sample text generated from the real findings">Seeded sample text</span>}
         {audit.llm && !audit.seeded && st === 'ready' && <span className="muted small">{audit.llm.mock ? 'MOCK LLM (scripted)' : `Written by ${audit.llm.model}, locally`}</span>}
       </div>
@@ -63,7 +63,7 @@ export default function Report() {
       <div className="row between wrap gap noprint">
         <div><Link to="/" className="muted small">&larr; Dashboard</Link>
           <h1 className="url-title">{host(audit.url)}</h1>
-          <p className="muted small">{audit.rendered && <span className="badge live">JS rendered</span>} {audit.finalUrl} &middot; {fmtDate(audit.createdAt)} &middot; audited in {audit.durationMs} ms</p></div>
+          <p className="muted small">{audit.site && <Link className="badge live" to={`/sites/${audit.site}`}>Part of a site audit</Link>} {audit.rendered && <span className="badge live">JS rendered</span>} {audit.finalUrl} &middot; {fmtDate(audit.createdAt)} &middot; audited in {audit.durationMs} ms</p></div>
         <div className="row gap wrap">
           {others.length > 0 && <select aria-label="Compare with" value="" onChange={(e) => e.target.value && nav(`/compare?a=${e.target.value}&b=${audit.id}`)}><option value="">Compare with...</option>{others.map((o) => <option key={o.id} value={o.id}>{host(o.url)} - {o.scores.overall} - {fmtDate(o.createdAt)}</option>)}</select>}
           <button className="btn ghost" onClick={() => download(`auditpilot-${host(audit.url).replace(/[^a-z0-9]+/gi, '-')}.md`, toMarkdown(audit))}>Export Markdown</button>

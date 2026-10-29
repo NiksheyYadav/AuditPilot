@@ -1,5 +1,5 @@
 import { cfg } from '../config.js';
-import { Audit } from '../models/index.js';
+import { Audit, SiteAudit } from '../models/index.js';
 import { topFindings } from '../audit/score.js';
 import { getProvider } from './llm/index.js';
 import { enqueue } from './llm/queue.js';
@@ -46,3 +46,49 @@ export function scheduleSummary(auditId) {
 }
 
 export { cfg };
+
+/* ---------------- site-level summary (one LLM call for the whole crawl) ---------------- */
+const pathOf = (u) => { try { const x = new URL(u); return x.pathname + x.search; } catch { return u; } };
+
+export function siteSummaryPrompt(site) {
+  const s = site.scores;
+  const cross = site.crossFindings.filter((f) => f.severity !== 'pass').map((f) => `- id=${f.id} | ${f.severity} | ${f.title} | ${clip(f.evidence, 140)}`);
+  const worst = [...site.pages].sort((a, b) => a.scores.overall - b.scores.overall).slice(0, 4)
+    .map((p) => `- id=page | ${p.scores.overall < 50 ? 'high' : p.scores.overall < 75 ? 'medium' : 'low'} | Weakest page ${pathOf(p.url)} (score ${p.scores.overall}) | ${p.issues} issues`);
+  return [
+    { role: 'system', content: `TASK:SUMMARY
+You write short website audit reports for a WHOLE SITE (${site.pages.length} pages audited). Use ONLY the data given. Do not invent numbers.
+Format exactly:
+SUMMARY: <3 sentences for a non-technical reader>
+FIX PLAN:
+1. <most important fix first> ... (max 5 items)
+
+SITE: ${site.url}
+SCORES: overall=${s.overall} seo=${s.seo} accessibility=${s.accessibility} security=${s.security} performance=${s.performance}
+FINDINGS:
+${[...cross, ...worst].join('\n') || '- (none)'}` },
+    { role: 'user', content: 'Write the summary and fix plan.' },
+  ];
+}
+
+export async function generateSiteSummary(siteId) {
+  const site = await SiteAudit.findById(siteId);
+  if (!site) return;
+  const provider = getProvider();
+  if (!provider.mock) {
+    const h = await llmHealth({ force: true });
+    if (!h.reachable || !h.modelInstalled) { await SiteAudit.updateOne({ _id: siteId }, { aiStatus: 'skipped', aiError: h.error }); return; }
+  }
+  try {
+    const r = await enqueue(() => provider.chat({ messages: siteSummaryPrompt(site), temperature: 0.1, maxTokens: 450 }), { priority: 0 });
+    const { summary, fixPlan } = parseSummary(r.content);
+    if (!summary) throw new Error('Model returned an empty summary');
+    await SiteAudit.updateOne({ _id: siteId }, { summary, fixPlan, aiStatus: 'ready', aiError: undefined, llm: { provider: provider.name, model: provider.model, mock: provider.mock } });
+  } catch (e) {
+    await SiteAudit.updateOne({ _id: siteId }, { aiStatus: 'failed', aiError: clip(e.message, 200) });
+  }
+}
+
+export function scheduleSiteSummary(siteId) {
+  setImmediate(() => generateSiteSummary(siteId).catch((e) => console.error('[site summary]', e.message)));
+}
