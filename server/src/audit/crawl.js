@@ -49,13 +49,44 @@ async function loadRobots(origin) {
   } catch { return null; }
 }
 
+const LOC_RE = /<loc>\s*(?:<!\[CDATA\[)?\s*([^<\s]+?)\s*(?:\]\]>)?\s*<\/loc>/gi;
+const decodeXml = (s) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+const locs = (xml) => [...String(xml).matchAll(LOC_RE)].map((m) => decodeXml(m[1]));
+
+/** Same-origin URLs listed in /sitemap.xml (or the first three same-origin children of a sitemap index). Never throws. */
+export async function loadSitemap(origin, { limit = 200 } = {}) {
+  const fetchXml = async (url) => {
+    try {
+      const r = await safeFetch(url, { maxBytes: 1024 * 1024, timeoutMs: 6000 });
+      return r.status === 200 && /<(urlset|sitemapindex)[\s>]/i.test(r.body) ? r.body : null; // a SPA fallback page is not a sitemap
+    } catch { return null; }
+  };
+  const root = await fetchXml(`${origin}/sitemap.xml`);
+  if (!root) return [];
+  let urls = [];
+  if (/<sitemapindex[\s>]/i.test(root)) {
+    for (const child of locs(root).slice(0, 3)) {
+      try { if (new URL(child).origin !== origin) continue; } catch { continue; }
+      const xml = await fetchXml(child);
+      if (xml) urls.push(...locs(xml));
+    }
+  } else urls = locs(root);
+  const out = new Set();
+  for (const u of urls) {
+    const n = normalizeLink(u, origin);
+    try { if (n && new URL(n).origin === origin) out.add(n); } catch { /* skip */ }
+    if (out.size >= limit) break;
+  }
+  return [...out];
+}
+
 /**
- * Polite same-origin breadth-first crawl. Every page goes through runAudit (SSRF guard, redirects re-validated,
+ * Polite same-origin breadth-first crawl. The start page comes first, then pages listed in /sitemap.xml (if any), then links found on pages. Every page goes through runAudit (SSRF guard, redirects re-validated,
  * off-site redirects refused). Honours robots.txt, waits between requests, and stops at maxPages / the deadline.
  * onPage(page) is awaited after each audited page so callers can persist progress.
  */
 export async function crawlSite(startUrl, {
-  maxPages = 10, render = false, delayMs = 300, respectRobots = true, deadlineMs = 300000,
+  maxPages = 10, render = false, delayMs = 300, respectRobots = true, useSitemap = true, deadlineMs = 300000,
   onProgress = () => {}, onPage = async () => {}, audit = runAudit,
 } = {}) {
   const origin = (await assertSafeUrl(startUrl)).origin; // throws SsrfError for blocked targets
@@ -63,6 +94,12 @@ export async function crawlSite(startUrl, {
   const probe = makeCachedProbe();
   const robots = respectRobots ? await loadRobots(origin) : null;
   const queue = [start], seen = new Set([start]), parents = new Map(), auditedFinal = new Set();
+  // A start URL below the site root (e.g. /blog) is a section: only sitemap pages inside it are seeded.
+  const sp = new URL(start).pathname;
+  const scope = sp === '/' ? '' : /\.[a-z0-9]+$/i.test(sp) ? sp.replace(/\/[^/]*$/, '') : sp.replace(/\/$/, '');
+  const inScope = (u) => { const p = new URL(u).pathname; return !scope || p === scope || p.startsWith(`${scope}/`); };
+  const seeds = useSitemap ? (await loadSitemap(origin)).filter((s) => s !== start && inScope(s)) : [];
+  for (const s of seeds) { queue.push(s); seen.add(s); parents.set(s, `${origin}/sitemap.xml`); }
   const pages = [], broken = [], skipped = [];
   const t0 = Date.now();
   let fetches = 0;
@@ -95,5 +132,5 @@ export async function crawlSite(startUrl, {
   }
   if (queue.length && pages.length >= maxPages) skipped.push({ url: `(${queue.length} more pages found)`, reason: `page limit (${maxPages}) reached` });
   onProgress({ done: pages.length, total: pages.length, current: '' });
-  return { origin, pages, broken, skipped };
+  return { origin, pages, broken, skipped, sitemapUrls: seeds.length };
 }

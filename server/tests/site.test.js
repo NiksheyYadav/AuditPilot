@@ -118,6 +118,40 @@ describe('crawlSite on the demo site', () => {
     expect(r.pages).toHaveLength(1);
     expect(r.skipped.some((s) => /off-site/.test(s.reason))).toBe(true);
   }, 30000);
+  it('seeds the crawl from sitemap.xml (same-origin only) and reports sitemap-listed 404s', async () => {
+    const page = (t) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${t}</title></head><body><h1>${t}</h1></body></html>`;
+    const routes = {};
+    const s = http.createServer((req, res) => {
+      const r = routes[req.url];
+      if (r === undefined) { res.statusCode = 404; res.setHeader('content-type', 'text/html'); return res.end('<!doctype html><title>Not found</title><h1>Not found</h1>'); }
+      res.setHeader('content-type', r.startsWith('<?xml') ? 'application/xml' : 'text/html'); res.end(r);
+    });
+    await new Promise((ok) => s.listen(0, '127.0.0.1', ok));
+    const o = `http://127.0.0.1:${s.address().port}`;
+    routes['/'] = page('Sitemap test home page'); routes['/a'] = page('Page A from the sitemap'); routes['/b'] = page('Page B from the sitemap');
+    routes['/sitemap.xml'] = `<?xml version="1.0"?><urlset><url><loc>${o}/a</loc></url><url><loc>${o}/b?utm_source=x</loc></url><url><loc>${o}/nope</loc></url><url><loc>http://example.com/elsewhere</loc></url></urlset>`;
+    const withMap = await crawlSite(`${o}/`, { maxPages: 10, delayMs: 0 });
+    const without = await crawlSite(`${o}/`, { maxPages: 10, delayMs: 0, useSitemap: false });
+    s.close();
+    expect(withMap.pages.map((p) => new URL(p.url).pathname)).toEqual(['/', '/a', '/b']);
+    expect(withMap.sitemapUrls).toBe(3);
+    expect(withMap.broken).toHaveLength(1);
+    expect(withMap.broken[0]).toMatchObject({ status: 404, from: `${o}/sitemap.xml` });
+    expect(withMap.pages.some((p) => p.url.includes('example.com'))).toBe(false);
+    expect(without.pages).toHaveLength(1); // the home page has no links, so only the sitemap finds /a and /b
+  }, 60000);
+  it('reads a sitemap index and ignores an HTML fallback served at /sitemap.xml', async () => {
+    const { loadSitemap } = await import('../src/audit/crawl.js');
+    const routes = {};
+    const s = http.createServer((req, res) => { const r = routes[req.url]; res.setHeader('content-type', 'text/html'); res.end(r === undefined ? '<!doctype html><title>SPA shell</title>' : r); });
+    await new Promise((ok) => s.listen(0, '127.0.0.1', ok));
+    const o = `http://127.0.0.1:${s.address().port}`;
+    expect(await loadSitemap(o)).toEqual([]); // HTML shell is not a sitemap
+    routes['/sitemap.xml'] = `<sitemapindex><sitemap><loc>${o}/s1.xml</loc></sitemap><sitemap><loc>http://example.com/s2.xml</loc></sitemap></sitemapindex>`;
+    routes['/s1.xml'] = `<urlset><url><loc>${o}/x</loc></url><url><loc><![CDATA[${o}/y]]></loc></url></urlset>`;
+    expect(await loadSitemap(o)).toEqual([`${o}/x`, `${o}/y`]);
+    s.close();
+  });
   it('hands one shared, memoised probe to every page of a crawl', async () => {
     const real = await import('../src/audit/fetcher.js');
     const cached = real.makeCachedProbe();

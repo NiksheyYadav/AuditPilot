@@ -31,7 +31,7 @@ export async function runSiteAudit(siteId, { audit } = {}) {
   const t0 = Date.now();
   try {
     const crawl = await crawlSite(site.url, {
-      maxPages: site.maxPages, render: site.rendered, delayMs: cfg.crawlDelayMs, respectRobots: cfg.crawlRespectRobots, deadlineMs: cfg.crawlTimeoutMs, audit,
+      maxPages: site.maxPages, render: site.rendered, delayMs: cfg.crawlDelayMs, respectRobots: cfg.crawlRespectRobots, useSitemap: cfg.crawlUseSitemap, deadlineMs: cfg.crawlTimeoutMs, audit,
       onProgress: (p) => SiteAudit.updateOne({ _id: siteId }, { progress: p }).catch(() => {}),
       onPage: async (page) => {
         const a = await createAudit(site.user, page.url, { ai: false, result: page, site: site._id });

@@ -328,11 +328,11 @@ s = new('What this project taught me', 'Learning Outcomes & Future Scope',
     'These are the real challenges I hit; future items are proposals, not claims of completion.', (
     "Seekha: poora MERN stack, JWT, SSRF jaise security risks, agent loop aur tool calling, MCP, aur testing.\n"
     "Challenge: chhota 3B local model kabhi tool ke arguments galat bana deta tha, jaise audit ID mangle kar dena. Maine short refs aur title se lookup add kiya.\n"
-    "Local model CPU par slow hai, isliye summary background mein, queue, aur server start par auto warm-up. JavaScript se bane pages ke liye optional headless render add kiya, aur poori site crawl robots.txt, same-origin aur SSRF guard ke saath safe banaya.\n"
-    "Future: bada ya fine-tuned model, docs par RAG, email alerts, CI integration, sitemap se crawl seed karna, aur zyada checks."))
+    "Local model CPU par slow hai, isliye summary background mein, queue, aur server start par auto warm-up. JavaScript se bane pages ke liye optional headless render add kiya, aur poori site crawl robots.txt, sitemap.xml, same-origin aur SSRF guard ke saath safe banaya.\n"
+    "Future: bada ya fine-tuned model, docs par RAG, email alerts, CI integration, aur zyada checks."))
 cols = [('Learning outcomes', EMERALD, ['Full-stack MERN with auth', 'JWT, validation, SSRF defence', 'Agent loop and tool calling', 'MCP: one registry, two clients', 'Testing with a mock LLM and a live one'], '✓'),
         ('Challenges solved', AMBER, ['A 3B model mangled an audit ID: short refs and title lookup', 'CPU LLM takes 15 to 40 s: background summary, queue, auto warm-up', 'Crawling a site safely: robots.txt, same-origin only, SSRF-guarded', 'Demo DB reset left a stale login ("Audit not found"): on-disk DB and session check'], '!'),
-        ('Future enhancements', FUCHSIA, ['Larger or fine-tuned models', 'RAG over WCAG and OWASP docs', 'Email alerts for scheduled audits', 'CI integration (fail on low score)', 'Sitemap seeding and Lighthouse-style metrics'], None)]
+        ('Future enhancements', FUCHSIA, ['Larger or fine-tuned models', 'RAG over WCAG and OWASP docs', 'Email alerts for scheduled audits', 'CI integration (fail on low score)', 'More checks and Lighthouse-style metrics'], None)]
 for i, (h, col, items, mark) in enumerate(cols):
     x = 0.7 + i * 4.05
     card(s, x, 1.95, 3.85, 4.85); shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.95, 3.85, 0.65, col, None, 0.25)

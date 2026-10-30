@@ -22,6 +22,7 @@ export const cfg = {
   get crawlDelayMs() { return Math.max(0, Number(env('CRAWL_DELAY_MS', 300))); },
   get crawlTimeoutMs() { return Number(env('CRAWL_TIMEOUT_MS', 300000)); },
   get crawlRespectRobots() { return env('CRAWL_RESPECT_ROBOTS', 'true') === 'true'; },
+  get crawlUseSitemap() { return env('CRAWL_USE_SITEMAP', 'true') === 'true'; },
   get maxLinks() { return Math.min(100, Math.max(1, Number(env('AUDIT_MAX_LINKS', 50)))); },
   get clientOrigin() { return env('CLIENT_ORIGIN', 'http://localhost:5173'); },
 };
