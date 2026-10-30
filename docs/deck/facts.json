@@ -1,5 +1,5 @@
 {
-  "tests_total": 86,
+  "tests_total": 102,
   "audit": 19,
   "ssrf": 21,
   "api": 10,
@@ -17,5 +17,17 @@
     "security": 65,
     "performance": 94
   },
-  "history": 7
+  "history": 7,
+  "site": 16,
+  "site_audit": {
+    "pages": 7,
+    "broken": 1,
+    "skipped": 1,
+    "overall": 77,
+    "seo": 78,
+    "accessibility": 99,
+    "security": 43,
+    "performance": 97,
+    "crawl_seconds": 2.3
+  }
 }

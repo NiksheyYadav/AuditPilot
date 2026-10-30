@@ -111,7 +111,8 @@ React 19 + Vite  --/api-->  Express 5  --Mongoose-->  MongoDB (Atlas or in-memor
 - `server/src/audit/` checkers, scoring, remediation map, SSRF guard, SSRF-safe fetcher
 - `server/src/agent/` LLM providers (`llm/openaiCompat.js`, `llm/mock.js`), queue, tools, agent loop, summary job
 - `server/src/mcp/server.js` MCP server over the same tool registry
-- `server/src/routes/` auth, audits, chat (SSE), built-in demo pages
+- `server/src/audit/crawl.js`, `siteChecks.js`, `server/src/services/siteService.js` the whole-site crawler, cross-page checks and background site job
+- `server/src/routes/` auth, audits, sites, schedules, chat (SSE), built-in demo pages (`/demo/bad`, `/demo/good`, `/demo/spa`, `/demo/site`)
 
 ### Agent design (built for small local models)
 - Audits never wait on the LLM. The summary and fix plan are generated in the background; the UI polls and shows "AI is writing the summary...".
@@ -180,7 +181,7 @@ Claude Desktop (`claude_desktop_config.json`):
 
 ## Tests
 
-`npm test` runs checker tests against the bad and good fixtures, scoring, the SSRF guard (localhost, 10.x, 169.254.169.254, redirects, non-http schemes), auth and ownership, the agent loop with the mock LLM (tool call then answer, invalid args, step cap), background summary status transitions, compare, SSE chat, JavaScript rendering, schedules, short refs, the link cap and an MCP stdio client test. Real local-model behaviour has its own opt-in suite, `npm run test:live` (summary quality, streamed answer, a real tool call), plus `npm run check:llm`.
+`npm test` runs checker tests against the bad and good fixtures, scoring, the SSRF guard (localhost, 10.x, 169.254.169.254, redirects, non-http schemes), auth and ownership, the agent loop with the mock LLM (tool call then answer, invalid args, step cap), background summary status transitions, compare, SSE chat, JavaScript rendering, schedules, short refs, the link cap, the whole-site crawl (robots.txt rules, same-origin and redirect limits, cross-page checks, aggregate score) and an MCP stdio client test. Real local-model behaviour has its own opt-in suite, `npm run test:live` (summary quality, streamed answer, a real tool call), plus `npm run check:llm`.
 
 ## Known limitations
 
@@ -188,4 +189,5 @@ Claude Desktop (`claude_desktop_config.json`):
 - Rendering JavaScript needs an installed Chrome/Edge/Chromium and takes longer (about 5-30 s per audit).
 - The demo DB is a local file database (`server/.data/mongo`); use `MONGO_URI` (Atlas free tier) for a hosted one. `npm run mcp` while the API is running uses its own in-memory DB unless you give it the same `MONGO_URI`. Scheduled audits only run while the API process is running.
 - Local demo pages are served over HTTP, so even `/demo/good` loses points on the HTTPS check.
+- Site audits find pages by following links (no `sitemap.xml` seeding yet), cap at 25 pages, and a crawl interrupted by an API restart is marked failed. Small single-page sites (like a one-page portfolio) audit as one page.
 # AuditPilot

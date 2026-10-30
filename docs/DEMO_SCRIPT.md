@@ -25,6 +25,17 @@
 | 3:40 | Switch to Claude Code (or Claude Desktop). Type: "Use auditpilot to audit http://localhost:4000/demo/bad". | "Same tools MCP server ke through Claude Code mein bhi chalte hain. Ek tool registry, do clients." |
 | 4:00 | Done. | "Security: SSRF guard, JWT, ownership checks, aur tests pass hain. Questions?" |
 
+## Optional: whole-site crawl (adds about 1 min)
+
+| Time | You do | You say (Hinglish, short) |
+|---|---|---|
+| +0:00 | Dashboard -> URL `http://localhost:4000/demo/site`, tick **Audit the whole site (crawl)**, pick **up to 10 pages**, **Run audit**. | "Ab poori website audit karte hain. Crawler pages ko khud dhoondhta hai, robots.txt maanta hai, aur har request SSRF guard se guzarti hai." |
+| +0:05 | The crawl itself finishes in a few seconds on the local demo site; pages and scores appear. | "Har page ek poora audit hai. Ye background job hai, isliye page block nahi hota." |
+| +0:15 | While the AI site summary is still being written (about 30 to 60 s), open **Site-wide findings**: duplicate titles, duplicate descriptions, broken page. Point at the skipped `/private` page. | "Ye cross-page issues hain jo ek page dekh kar nahi milte. Aur robots.txt ne private page ko skip karwaya." |
+| +0:45 | Open the worst page from the table. | "Har page ka apna report, fix snippet aur chat hai." |
+
+The crawl takes only a few seconds on the local demo site (a real site is slower because of the polite delay between pages). The AI site summary then takes about 30 to 60 s on this laptop's CPU, so keep talking over the findings. nikshey.xyz is a one-page portfolio, so use `/demo/site` for this part.
+
 ## If the local model is slow
 - A 3B model on CPU takes **15-30 s** per answer. This is normal. Do not apologise, narrate: "Model locally chal raha hai, isliye 20 second lagte hain, cloud hota to turant aata, lekin yahan data machine se bahar nahi jaata."
 - While "AI is writing the summary..." shows, keep talking over the findings (step at 1:00). Scores and findings never wait for the model.
